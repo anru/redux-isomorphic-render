@@ -1,5 +1,5 @@
 {
-  "name": "redux-wait",
+  "name": "redux-isomorphic-render",
   "version": "1.0.0",
   "main": "./lib/index.js",
   "description": "A helper to let you wait for redux actions to be processed in a universal app",
