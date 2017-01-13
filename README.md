@@ -1,24 +1,32 @@
-# redux-wait
+# redux-isomorphic-render
 
 A helper to let you wait for redux actions to be processed in a universal app.
+(Had been forked from redux-wait)
 
-[![Build Status](https://img.shields.io/travis/ForbesLindesay/redux-wait/master.svg)](https://travis-ci.org/ForbesLindesay/redux-wait)
-[![Dependency Status](https://img.shields.io/david/ForbesLindesay/redux-wait.svg)](https://david-dm.org/ForbesLindesay/redux-wait)
-[![NPM version](https://img.shields.io/npm/v/redux-wait.svg)](https://www.npmjs.org/package/redux-wait)
+[![Dependency Status](https://img.shields.io/david/anru/redux-isomorphic-render.svg)](https://david-dm.org/anru/redux-isomorphic-render)
+[![NPM version](https://img.shields.io/npm/v/redux-isomorphic-render.svg)](https://www.npmjs.org/package/redux-isomorphic-render)
 
 ## Installation
 
-    npm install redux-wait
+    yarn add redux-isomorphic-render
+    # or
+    npm install redux-isomorphic-render
 
+
+## Differences from redux-wait
+
+1. Fixed "ReferenceError: onError is not defined" error
+2. Application could catch promise errors in components level,
+   in that case redux-isomorphic-render doesn't fail rendering your page
 
 ## Usage
 
-### 1. Replace `applyMiddleware` with `redux-await`
+### 1. Replace `applyMiddleware` with `redux-isomorphic-render`
 
 
 ```diff
 - var applyMiddleware = require('redux').applyMiddleware;
-+ var applyMiddleware = require('redux-wait');
++ var applyMiddleware = require('redux-isomorphic-render');
 ```
 
 This will add an extra method to your store called `store.renderToString`.
@@ -95,7 +103,7 @@ componentWillMount() {
 // N.B. `createStore` is the result of using redux-wait instead of Redux.applyMiddleware
 let store = createStore();
 let element = <Root history={new MemoryHistory([req.url])} store={store} />;
-store.renderToString(React, element).done(function (html) {
+store.renderToString(ReactDOM.renderToString, element).then(function (html) {
   res.send(
     indexHtml.replace(
       '{{content}}',
