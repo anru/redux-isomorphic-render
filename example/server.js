@@ -23,7 +23,7 @@ app.use(function (req, res, next) {
   if (req.path === '/favicon.ico') return next();
   let store = createStore();
   let element = <Root history={new MemoryHistory([req.url])} store={store} />;
-  store.renderToString(React, element).done(function (html) {
+  store.renderToString(React.renderToString, element).done(function (html) {
     res.send(indexHtml.replace(/\{\{([a-z]*)\}\}/g, function (_, name) {
       if (name === 'content') return html;
       if (name === 'state') return stringify(store.getState());

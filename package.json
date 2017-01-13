@@ -1,24 +1,26 @@
 {
   "name": "redux-isomorphic-render",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "./lib/index.js",
   "description": "A helper to let you wait for redux actions to be processed in a universal app",
   "keywords": [],
   "dependencies": {
-    "is-promise": "^2.0.0",
-    "promise": "^7.0.4"
+    "is-promise": "^2.0.0"
   },
   "devDependencies": {
-    "babel": "^5.8.21"
+    "babel": "^6.5.2",
+    "babel-cli": "^6.18.0",
+    "babel-preset-es2015": "^6.18.0",
+    "babel-preset-stage-1": "^6.16.0"
   },
   "scripts": {
     "prepublish": "npm run build",
-    "build": "babel src --out-dir lib",
+    "build": "babel src -d lib",
     "test": "mocha -R spec"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ForbesLindesay/redux-wait.git"
+    "url": "https://github.com/anru/redux-isomorphic-render.git"
   },
   "author": "ForbesLindesay",
   "license": "MIT"

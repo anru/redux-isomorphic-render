@@ -1,56 +1,82 @@
 'use strict';
 
-import Promise from 'promise';
 import isPromise from 'is-promise';
 
-function noop() {}
-export default function reduxWait(...middlewares) {
+export default function reduxIsomorphicRender(...middlewares) {
   return function (next) {
     return function (reducer, initialState) {
-      var store = next(reducer, initialState);
-      var dispatch = store.dispatch;
-      var chain = [];
+      const store = next(reducer, initialState);
+      let dispatch = store.dispatch;
 
-      var pending = 0, onSuccess, onFailure;
-      function handleWatingOnMiddleware(middleware) {
+      let pending = 0, onComplete;
+      let firstError;
+
+      function handleWaitingOnMiddleware(middleware) {
         return action => {
           let result = middleware(action);
           if (isPromise(result)) {
             pending++;
-            Promise.resolve(result).done(function () {
+            result = result.then(function () {
               pending--;
-              if (pending === 0 && onSuccess) onSuccess();
+              if (pending === 0 && onComplete) onComplete();
             }, function (err) {
-              if (onFailure) onFailure(err);
-              else throw err;
+              if (!firstError) firstError = err;
+              pending--;
+              if (pending === 0 && onComplete) onComplete();
+              throw err;
             });
           }
           return result;
         }
       }
-      var middlewareAPI = {
+      const middlewareAPI = {
         getState: store.getState,
         dispatch: (action) => dispatch(action)
       };
-      chain = middlewares.map(
+
+      const chain = middlewares.map(
         middleware => middleware(middlewareAPI)
       ).map(
-        middleware => next => handleWatingOnMiddleware(middleware(next))
+        middleware => next => handleWaitingOnMiddleware(middleware(next))
       );
       dispatch = compose(...chain, store.dispatch);
 
-      function renderToString(React, element) {
+      function renderToString(reactRenderToString, element) {
         return new Promise(function (resolve, reject) {
+
           let html = '', resolved = false;
           let dirty = false, inProgress = false;
-          onFailure = (err) => {
+
+          const unhandledRejections = new Map();
+
+          function unhandledRejectionHandler(reason, p) {
+            unhandledRejections.set(p, reason);
+          }
+
+          function rejectionHandled(p) {
+            unhandledRejections.delete(p);
+          }
+
+          onComplete = () => {
             resolved = true;
-            reject(err);
+            if (!firstError) {
+              resolve(html);
+            } else {
+              process.nextTick(() => {
+                process.removeListener('unhandledRejection', unhandledRejectionHandler);
+                process.removeListener('rejectionHandled', rejectionHandled);
+                if (unhandledRejections.size) {
+                  reject(firstError);
+                } else {
+                  resolve(html);
+                }
+              });
+            }
           };
-          onSuccess = () => {
-            resolved = true;
-            resolve(html)
-          };
+
+          process.on('unhandledRejection', unhandledRejectionHandler);
+          process.on('rejectionHandled', rejectionHandled);
+
           function render() {
             if (resolved) return;
             dirty = true;
@@ -58,13 +84,13 @@ export default function reduxWait(...middlewares) {
             inProgress = true;
             while (dirty && !resolved) {
               dirty = false;
-              html = React.renderToString(element);
+              html = reactRenderToString(element);
             }
             inProgress = false;
           }
           store.subscribe(render);
           render();
-          if (pending === 0) onSuccess();
+          if (pending === 0) onComplete();
         });
       }
       return {
