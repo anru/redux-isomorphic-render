@@ -1,6 +1,6 @@
 {
   "name": "redux-isomorphic-render",
-  "version": "1.1.1",
+  "version": "1.2.1",
   "main": "./lib/index.js",
   "description": "A helper to let you wait for redux actions to be processed in a universal app",
   "keywords": [],
